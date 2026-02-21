@@ -1,26 +1,52 @@
 package com.game;
 
+import java.util.InputMismatchException;
 import java.util.Scanner;
-import java.util.Random;
 
 public class Main {
     public static void main(String[] args) {
+        GameLogger logger = new GameLogger();
         Scanner scanner = new Scanner(System.in);
-        int hiddenNumber = (int)(Math.random() * 9000) + 1000;
-        int estimatedNumber = 0;
-        System.out.println(hiddenNumber);
-        CheckingMatches checker = new CheckingMatches();
+        
+        try {
+            int hiddenNumber = RandomNumberGenerator.generateUnique4DigitNumber();
+            int estimatedNumber = 0;
+            
+            logger.logGameStart(hiddenNumber);
 
-        while (hiddenNumber != estimatedNumber) {
-            estimatedNumber = scanner.nextInt();
-            if (estimatedNumber < 1000 || estimatedNumber > 9999){
-                System.out.println("only 4-digit numbers");
+            while (hiddenNumber != estimatedNumber) {
+                
+                try{
+                    estimatedNumber = scanner.nextInt();
+                    
+                    if (estimatedNumber < 1000 || estimatedNumber > 9999){
+                        System.out.println("only 4-digit number");
+                        logger.log("error " + estimatedNumber + " not 4-digit number");
+                        continue;
+                    }
+                    
+                    logger.logPlayerGuess(estimatedNumber);
+                    
+                    CountResult result = BullsAndCowsCounter.count(hiddenNumber, estimatedNumber);
+                    
+                    System.out.println("bulls: " + result.getBulls());
+                    System.out.println("cows: " + result.getCows());
+                    
+                    logger.logResult(result.getBulls(), result.getCows());
+                    
+                } catch (InputMismatchException e){
+                    String invalidInput = scanner.next();
+                    System.out.println("only 4-digit number");
+                    logger.logInvalidInput(invalidInput);
+                }
             }
-            checker.count(hiddenNumber, estimatedNumber);
-            System.out.println("Bulls " + checker.getBulls());
-            System.out.println("Cows " + checker.getCows());
+            
+            System.out.println("win");
+            logger.logGameEnd(true, hiddenNumber);
+            
+        } finally {
+            scanner.close();
+            logger.close();
         }
-        scanner.close();
-        System.out.println("win");
     }
 }
