@@ -14,9 +14,9 @@ public class BullsAndCowsCounter {
     
     private static int countBulls(String hidden, String estimated) {
         int bulls = 0;
-        for (int i = 0; i < hidden.length(); i++) {
+        for (int i = 0; i < hidden.length(); ++i) {
             if (hidden.charAt(i) == estimated.charAt(i)) {
-                bulls++;
+                ++bulls;
             }
         }
         return bulls;
@@ -26,18 +26,18 @@ public class BullsAndCowsCounter {
         int cows = 0;
         boolean[] matchedInEstimated = new boolean[estimated.length()];
         
-        for (int i = 0; i < hidden.length(); i++) {
+        for (int i = 0; i < hidden.length(); ++i) {
             if (hidden.charAt(i) == estimated.charAt(i)) {
                 matchedInEstimated[i] = true;
             }
         }
         
-        for (int i = 0; i < hidden.length(); i++) {
+        for (int i = 0; i < hidden.length(); ++i) {
             if (hidden.charAt(i) == estimated.charAt(i)) continue;
             
-            for (int j = 0; j < estimated.length(); j++) {
+            for (int j = 0; j < estimated.length(); ++j) {
                 if (!matchedInEstimated[j] && hidden.charAt(i) == estimated.charAt(j)) {
-                    cows++;
+                    ++cows;
                     matchedInEstimated[j] = true;
                     break;
                 }
