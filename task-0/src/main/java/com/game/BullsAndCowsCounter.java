@@ -1,5 +1,5 @@
 package com.game;
-
+//добавить task0 папку
 public class BullsAndCowsCounter {
     
     public static CountResult count(int hiddenNumber, int estimatedNumber) {
