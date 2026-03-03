@@ -21,7 +21,7 @@ public class Main {
                     
                     if (estimatedNumber < 1000 || estimatedNumber > 9999){
                         System.out.println("only 4-digit number");
-                        logger.log("error " + estimatedNumber + " not 4-digit number");
+                        logger.debug("player entered non-4-digit number: {}", estimatedNumber);
                         continue;
                     }
                     
@@ -37,7 +37,7 @@ public class Main {
                 } catch (InputMismatchException e){
                     String invalidInput = scanner.next();
                     System.out.println("only 4-digit number");
-                    logger.logInvalidInput(invalidInput);
+                    logger.debug("player entered invalid input: '{}'", invalidInput);
                 }
             }
             
