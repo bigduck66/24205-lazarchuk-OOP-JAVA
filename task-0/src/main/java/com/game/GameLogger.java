@@ -43,7 +43,6 @@ public class GameLogger {
         logger.info("game end");
     }
     
-    // Добавляем методы debug для совместимости с Main.java
     public void debug(String message, int value) {
         logger.debug(message, value);
     }
