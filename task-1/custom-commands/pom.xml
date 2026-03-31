@@ -15,7 +15,6 @@
     </properties>
 
     <dependencies>
-        <!-- Интерфейсы из основного калькулятора -->
         <dependency>
             <groupId>calculator</groupId>
             <artifactId>stack-calculator</artifactId>
@@ -23,7 +22,6 @@
             <scope>provided</scope>
         </dependency>
         
-        <!-- SLF4J -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
