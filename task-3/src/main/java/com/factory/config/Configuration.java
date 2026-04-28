@@ -12,7 +12,7 @@ public class Configuration {
     private final Properties properties;
 
     public Configuration(String configFile) throws IOException {
-        properties = new Properties();
+        properties = new Properties();//Map<String, String>
         try (FileInputStream fis = new FileInputStream(configFile)) {
             properties.load(fis);
             logger.info("Configuration loaded from {}", configFile);

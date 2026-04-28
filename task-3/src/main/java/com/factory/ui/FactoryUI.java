@@ -1,12 +1,7 @@
 package com.factory.ui;
 
+import com.factory.FactoryManager;
 import com.factory.config.Configuration;
-import com.factory.controller.FactoryController;
-import com.factory.dealer.Dealer;
-import com.factory.model.*;
-import com.factory.storage.CarStorage;
-import com.factory.storage.Storage;
-import com.factory.supplier.Supplier;
 import com.factory.worker.Worker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,27 +9,12 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class FactoryUI extends JFrame {
     private static final Logger logger = LoggerFactory.getLogger(FactoryUI.class);
     
-    private final Configuration config;
-    private final Storage<Body> bodyStorage;
-    private final Storage<Engine> engineStorage;
-    private final Storage<Accessory> accessoryStorage;
-    private final CarStorage carStorage;
-    
-    private final List<Supplier<Body>> bodySuppliers = new ArrayList<>();
-    private final List<Supplier<Engine>> engineSuppliers = new ArrayList<>();
-    private final List<Supplier<Accessory>> accessorySuppliers = new ArrayList<>();
-    private final List<Dealer> dealers = new ArrayList<>();
-    private ExecutorService workerPool;
-    private FactoryController controller;
+    private final FactoryManager factoryManager;
     
     private final JLabel bodyCountLabel = new JLabel("0/0");
     private final JLabel engineCountLabel = new JLabel("0/0");
@@ -56,17 +36,13 @@ public class FactoryUI extends JFrame {
     private volatile boolean running = true;
 
     public FactoryUI(Configuration config) {
-        this.config = config;
-        
-        this.bodyStorage = new Storage<>(config.getStorageBodySize());
-        this.engineStorage = new Storage<>(config.getStorageMotorSize());
-        this.accessoryStorage = new Storage<>(config.getStorageAccessorySize());
-        this.carStorage = new CarStorage(config.getStorageAutoSize());
+        this.factoryManager = new FactoryManager(config);
         
         logger.info("Initializing Factory UI");
         initUI();
-        initFactory();
-        startFactory();
+        
+        factoryManager.initFactory();
+        factoryManager.startFactory();
         
         updateTimer = new Timer(100, e -> updateStats());
         updateTimer.start();
@@ -155,105 +131,58 @@ public class FactoryUI extends JFrame {
         return panel;
     }
 
-    private void initFactory() {
-        for (int i = 0; i < config.getBodySuppliers(); i++) {
-            Supplier<Body> supplier = new Supplier<>("BodySupplier-" + i, bodyStorage, Body::new);
-            supplier.setDelay(config.getSupplierDelay());
-            bodySuppliers.add(supplier);
-        }
-        
-        for (int i = 0; i < config.getMotorSuppliers(); i++) {
-            Supplier<Engine> supplier = new Supplier<>("EngineSupplier-" + i, engineStorage, Engine::new);
-            supplier.setDelay(config.getSupplierDelay());
-            engineSuppliers.add(supplier);
-        }
-        
-        for (int i = 0; i < config.getAccessorySuppliers(); i++) {
-            Supplier<Accessory> supplier = new Supplier<>("AccessorySupplier-" + i, accessoryStorage, Accessory::new);
-            supplier.setDelay(config.getSupplierDelay());
-            accessorySuppliers.add(supplier);
-        }
-        
-        workerPool = Executors.newFixedThreadPool(config.getWorkers());
-        
-        Runnable assemblyTask = () -> {
-            Worker worker = new Worker(0, bodyStorage, engineStorage, accessoryStorage, carStorage);
-            worker.run();
-        };
-        
-        controller = new FactoryController(carStorage, workerPool, assemblyTask);
-        
-        for (int i = 0; i < config.getDealers(); i++) {
-            Dealer dealer = new Dealer(i + 1, carStorage, config.isLogSale());
-            dealer.setDelay(config.getDealerDelay());
-            dealers.add(dealer);
-        }
-    }
-
-    private void startFactory() {
-        logger.info("Starting factory");
-        bodySuppliers.forEach(Supplier::start);
-        engineSuppliers.forEach(Supplier::start);
-        accessorySuppliers.forEach(Supplier::start);
-        controller.start();
-        dealers.forEach(Dealer::start);
-    }
-
     private void stopFactory() {
         logger.info("Stopping factory");
         running = false;
         updateTimer.stop();
-        
-        bodySuppliers.forEach(Supplier::stopSupplier);
-        engineSuppliers.forEach(Supplier::stopSupplier);
-        accessorySuppliers.forEach(Supplier::stopSupplier);
-        controller.stopController();
-        dealers.forEach(Dealer::stopDealer);
-        workerPool.shutdown();
-        
+        factoryManager.stopFactory();
         dispose();
     }
 
     private void updateStats() {
         bodyCountLabel.setText(String.format("%d/%d", 
-            bodyStorage.getCurrentSize(), bodyStorage.getCapacity()));
+            factoryManager.getBodyStorage().getCurrentSize(), 
+            factoryManager.getBodyStorage().getCapacity()));
         engineCountLabel.setText(String.format("%d/%d", 
-            engineStorage.getCurrentSize(), engineStorage.getCapacity()));
+            factoryManager.getEngineStorage().getCurrentSize(), 
+            factoryManager.getEngineStorage().getCapacity()));
         accessoryCountLabel.setText(String.format("%d/%d", 
-            accessoryStorage.getCurrentSize(), accessoryStorage.getCapacity()));
+            factoryManager.getAccessoryStorage().getCurrentSize(), 
+            factoryManager.getAccessoryStorage().getCapacity()));
         carCountLabel.setText(String.format("%d/%d", 
-            carStorage.getCurrentSize(), carStorage.getCapacity()));
+            factoryManager.getCarStorage().getCurrentSize(), 
+            factoryManager.getCarStorage().getCapacity()));
         
-        totalBodyProducedLabel.setText(String.valueOf(bodyStorage.getTotalProduced()));
-        totalEngineProducedLabel.setText(String.valueOf(engineStorage.getTotalProduced()));
-        totalAccessoryProducedLabel.setText(String.valueOf(accessoryStorage.getTotalProduced()));
+        totalBodyProducedLabel.setText(String.valueOf(factoryManager.getBodyStorage().getTotalProduced()));
+        totalEngineProducedLabel.setText(String.valueOf(factoryManager.getEngineStorage().getTotalProduced()));
+        totalAccessoryProducedLabel.setText(String.valueOf(factoryManager.getAccessoryStorage().getTotalProduced()));
         
         carsBuiltLabel.setText(String.valueOf(Worker.getCarsBuilt()));
-        carsSoldLabel.setText(String.valueOf(carStorage.getTotalSold()));
+        carsSoldLabel.setText(String.valueOf(factoryManager.getCarStorage().getTotalSold()));
         
-        if (workerPool instanceof ThreadPoolExecutor) {
-            ThreadPoolExecutor executor = (ThreadPoolExecutor) workerPool;
+        if (factoryManager.getWorkerPool() instanceof ThreadPoolExecutor) {
+            ThreadPoolExecutor executor = (ThreadPoolExecutor) factoryManager.getWorkerPool();
             queueSizeLabel.setText(String.valueOf(executor.getQueue().size()));
         }
     }
 
     private void updateBodySupplierSpeed(ChangeEvent e) {
         int delay = bodySupplierSpeedSlider.getValue();
-        bodySuppliers.forEach(s -> s.setDelay(delay));
+        factoryManager.getBodySuppliers().forEach(s -> s.setDelay(delay));
     }
 
     private void updateEngineSupplierSpeed(ChangeEvent e) {
         int delay = engineSupplierSpeedSlider.getValue();
-        engineSuppliers.forEach(s -> s.setDelay(delay));
+        factoryManager.getEngineSuppliers().forEach(s -> s.setDelay(delay));
     }
 
     private void updateAccessorySupplierSpeed(ChangeEvent e) {
         int delay = accessorySupplierSpeedSlider.getValue();
-        accessorySuppliers.forEach(s -> s.setDelay(delay));
+        factoryManager.getAccessorySuppliers().forEach(s -> s.setDelay(delay));
     }
 
     private void updateDealerSpeed(ChangeEvent e) {
         int delay = dealerSpeedSlider.getValue();
-        dealers.forEach(d -> d.setDelay(delay));
+        factoryManager.getDealers().forEach(d -> d.setDelay(delay));
     }
 }

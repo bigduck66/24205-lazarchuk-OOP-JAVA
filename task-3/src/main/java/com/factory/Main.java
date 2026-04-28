@@ -12,7 +12,7 @@ public class Main {
     
     public static void main(String[] args) {
         logger.info("Starting Car Factory Emulator");
-        SwingUtilities.invokeLater(() -> {
+        SwingUtilities.invokeLater(() -> {//Event Dispatch Thread
             try {
                 Configuration config = new Configuration("config.properties");
                 FactoryUI ui = new FactoryUI(config);

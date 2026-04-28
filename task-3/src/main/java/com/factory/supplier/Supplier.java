@@ -1,5 +1,4 @@
 package com.factory.supplier;
-
 import com.factory.model.Component;
 import com.factory.storage.Storage;
 import org.slf4j.Logger;
