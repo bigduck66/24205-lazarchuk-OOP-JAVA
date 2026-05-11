@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import java.awt.*;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class FactoryUI extends JFrame {
     private static final Logger logger = LoggerFactory.getLogger(FactoryUI.class);
@@ -160,10 +159,7 @@ public class FactoryUI extends JFrame {
         carsBuiltLabel.setText(String.valueOf(Worker.getCarsBuilt()));
         carsSoldLabel.setText(String.valueOf(factoryManager.getCarStorage().getTotalSold()));
         
-        if (factoryManager.getWorkerPool() instanceof ThreadPoolExecutor) {
-            ThreadPoolExecutor executor = (ThreadPoolExecutor) factoryManager.getWorkerPool();
-            queueSizeLabel.setText(String.valueOf(executor.getQueue().size()));
-        }
+        queueSizeLabel.setText(String.valueOf(factoryManager.getWorkerPool().getQueueSize()));
     }
 
     private void updateBodySupplierSpeed(ChangeEvent e) {

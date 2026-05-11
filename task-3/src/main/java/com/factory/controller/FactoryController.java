@@ -1,20 +1,18 @@
 package com.factory.controller;
 
+import com.factory.pool.MyThreadPool;
 import com.factory.storage.CarStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ExecutorService;
-
 public class FactoryController extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(FactoryController.class);
     private final CarStorage carStorage;
-    private final ExecutorService workerPool;
+    private final MyThreadPool workerPool;
     private final Runnable taskFactory;
     private volatile boolean running = true;
 
-    public FactoryController(CarStorage carStorage, ExecutorService workerPool, 
-                            Runnable taskFactory) {
+    public FactoryController(CarStorage carStorage, MyThreadPool workerPool, Runnable taskFactory) {
         super("FactoryController");
         this.carStorage = carStorage;
         this.workerPool = workerPool;
@@ -24,7 +22,6 @@ public class FactoryController extends Thread {
 
     public void stopController() {
         running = false;
-        logger.info("Stopping factory controller");
         interrupt();
     }
 
@@ -38,17 +35,16 @@ public class FactoryController extends Thread {
                         logger.debug("Car storage is above 50%, waiting...");
                         carStorage.wait();
                     }
-                    
+
                     int carsToBuild = carStorage.getCapacity() - carStorage.getCurrentSize();
                     logger.info("Creating {} assembly tasks", carsToBuild);
-                    
+
                     for (int i = 0; i < carsToBuild; i++) {
                         workerPool.submit(taskFactory);
                     }
-                    
+
                     carStorage.wait();
                 } catch (InterruptedException e) {
-                    logger.info("Factory controller interrupted");
                     Thread.currentThread().interrupt();
                     break;
                 }
