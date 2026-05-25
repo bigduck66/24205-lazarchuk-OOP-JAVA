@@ -1,6 +1,6 @@
 package com.factory.controller;
 
-import com.factory.pool.MyThreadPool;
+import com.factory.pool.ThreadPool;
 import com.factory.storage.CarStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,11 +8,11 @@ import org.slf4j.LoggerFactory;
 public class FactoryController extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(FactoryController.class);
     private final CarStorage carStorage;
-    private final MyThreadPool workerPool;
+    private final ThreadPool workerPool;
     private final Runnable taskFactory;
     private volatile boolean running = true;
 
-    public FactoryController(CarStorage carStorage, MyThreadPool workerPool, Runnable taskFactory) {
+    public FactoryController(CarStorage carStorage, ThreadPool workerPool, Runnable taskFactory) {
         super("FactoryController");
         this.carStorage = carStorage;
         this.workerPool = workerPool;

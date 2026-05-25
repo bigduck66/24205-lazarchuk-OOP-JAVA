@@ -59,4 +59,7 @@ public class Worker implements Runnable {
     public int getId() {
         return id;
     }
+    // public void nothing() {
+    //     Thread task = new Thread(new Worker(1, null, null, null, null));
+    // }
 }

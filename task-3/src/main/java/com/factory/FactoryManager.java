@@ -4,7 +4,7 @@ import com.factory.config.Configuration;
 import com.factory.controller.FactoryController;
 import com.factory.dealer.Dealer;
 import com.factory.model.*;
-import com.factory.pool.MyThreadPool;
+import com.factory.pool.ThreadPool;
 import com.factory.storage.CarStorage;
 import com.factory.storage.Storage;
 import com.factory.supplier.Supplier;
@@ -28,7 +28,7 @@ public class FactoryManager {
     private final List<Supplier<Engine>> engineSuppliers = new ArrayList<>();
     private final List<Supplier<Accessory>> accessorySuppliers = new ArrayList<>();
     private final List<Dealer> dealers = new ArrayList<>();
-    private MyThreadPool workerPool;
+    private ThreadPool workerPool;
     private FactoryController controller;
     private volatile boolean running = false;
 
@@ -72,13 +72,16 @@ public class FactoryManager {
     }
 
     private void createWorkerPool() {
-        workerPool = new MyThreadPool(config.getWorkers());
+        workerPool = new ThreadPool(config.getWorkers());
     }
 
     private void createController() {
-        Runnable assemblyTask = () -> {
-            Worker worker = new Worker(0, bodyStorage, engineStorage, accessoryStorage, carStorage);
-            worker.run();
+        Runnable assemblyTask = new Runnable() {
+            @Override
+            public void run(){
+                Worker worker = new Worker(0, bodyStorage, engineStorage, accessoryStorage, carStorage);
+                worker.run();
+            }
         };
         controller = new FactoryController(carStorage, workerPool, assemblyTask);
     }
@@ -120,7 +123,7 @@ public class FactoryManager {
     public Storage<Engine> getEngineStorage() { return engineStorage; }
     public Storage<Accessory> getAccessoryStorage() { return accessoryStorage; }
     public CarStorage getCarStorage() { return carStorage; }
-    public MyThreadPool getWorkerPool() { return workerPool; }
+    public ThreadPool getWorkerPool() { return workerPool; }
     public List<Supplier<Body>> getBodySuppliers() { return bodySuppliers; }
     public List<Supplier<Engine>> getEngineSuppliers() { return engineSuppliers; }
     public List<Supplier<Accessory>> getAccessorySuppliers() { return accessorySuppliers; }

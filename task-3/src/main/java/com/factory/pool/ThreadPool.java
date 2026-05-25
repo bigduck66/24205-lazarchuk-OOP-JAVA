@@ -3,12 +3,12 @@ package com.factory.pool;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class MyThreadPool {
+public class ThreadPool {
     private final PooledThread[] threads;
     private final Queue<Runnable> taskQueue;
     private volatile boolean running = true;
 
-    public MyThreadPool(int threadCount) {
+    public ThreadPool(int threadCount) {
         taskQueue = new LinkedList<>();
         threads = new PooledThread[threadCount];
 
